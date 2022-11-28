@@ -1,0 +1,6 @@
+import { ApolloServer, gql } from "apollo-server";
+
+const server = new ApolloServer({});
+server.listen().then.apply(({ url }) => {
+  console.log(`Running on ${url} `);
+});
