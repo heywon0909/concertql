@@ -1,6 +1,6 @@
 import { ApolloServer, gql } from "apollo-server";
 import axios from "axios";
-import fetch from "node-fetch"
+import fetch from "node-fetch";
 import cheerio from "cheerio";
 
 const typeDefs = gql`
@@ -19,7 +19,7 @@ const typeDefs = gql`
     url: String!
     listeners: String!
     streamable: String!
-    img:[String]!
+    img: [String]!
   }
   type Query {
     allConcerts: [Concert!]!
@@ -56,48 +56,70 @@ const resolvers = {
         });
     },
     allPerformers() {
-      return axios
-        .get(
-          "https://ws.audioscrobbler.com/2.0/?method=artist.search&artist=" +
-            "maroon" +
-            "&api_key=8ebd7023ea5bf92e4f875cc362a8344a&format=json"
-        )
-        .then((json) => json.data.results.artistmatches.artist);
+      return fetch(
+        "https://musicbrainz.org/ws/2/artist/?query=artist:" +
+          "justin" +
+          "&fmt=json"
+      )
+        .then((r) => r.json())
+        .then((json) => {
+          console.log("json", json);
+          return json.artists;
+        });
+      // return axios
+      //   .get(
+      //     "https://ws.audioscrobbler.com/2.0/?method=artist.search&artist=" +
+      //       "maroon" +
+      //       "&api_key=8ebd7023ea5bf92e4f875cc362a8344a&format=json"
+      //   )
+      //   .then((json) => json.data.results.artistmatches.artist);
     },
   },
-      Performer: {
-        img({ mbid }) {
-          if (!mbid) return [];
-         const url = 'https://musicbrainz.org/ws/2/artist/' + mbid + '?inc=url-rels&fmt=json';
-               console.log(url);
-          return fetch(url)
-            .then((r)=>r.json())
-                  .then((out) => {
-                    const relations = out.relations;
-                    console.log('relations', relations);
-                     
-                      if (relations) {
-                       let arr = [];
-                        relations.forEach(item => {
-                          console.log('item', item.name);
-                        if (item.type === 'image') {
-                          let image_url = item.url.resource;
-                                    if (image_url.startsWith('https://commons.wikimedia.org/wiki/File:')) {
-                                    const filename = image_url.substring(image_url.lastIndexOf('/') + 1);
-                                    image_url = 'https://commons.wikimedia.org/wiki/Special:Redirect/file/' + filename;
-                                }
-                          //console.log(image_url);
-                          arr.push(image_url);
-                        }
-                      });
-                        console.log('arr', arr);
-                        return arr;
-                      }
-                      
-                    })
-                    .catch(err => { throw console.log(err) });
-      }
-    }
+  Performer: {
+    img({ mbid }) {
+      if (!mbid) return [];
+      const url =
+        "https://musicbrainz.org/ws/2/artist/" +
+        mbid +
+        "?inc=url-rels&fmt=json";
+      console.log(url);
+      return fetch(url)
+        .then((r) => r.json())
+        .then((out) => {
+          const relations = out.relations;
+          console.log("relations", relations);
+
+          if (relations) {
+            let arr = [];
+            relations.forEach((item) => {
+              console.log("item", item.name);
+              if (item.type === "image") {
+                let image_url = item.url.resource;
+                if (
+                  image_url.startsWith(
+                    "https://commons.wikimedia.org/wiki/File:"
+                  )
+                ) {
+                  const filename = image_url.substring(
+                    image_url.lastIndexOf("/") + 1
+                  );
+                  image_url =
+                    "https://commons.wikimedia.org/wiki/Special:Redirect/file/" +
+                    filename;
+                }
+                //console.log(image_url);
+                arr.push(image_url);
+              }
+            });
+            console.log("arr", arr);
+            return arr;
+          }
+        })
+        .catch((err) => {
+          throw console.log(err);
+        });
+    },
+  },
 };
 const server = new ApolloServer({ typeDefs, resolvers });
 
