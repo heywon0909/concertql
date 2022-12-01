@@ -3,6 +3,8 @@ import axios from "axios";
 import fetch from "node-fetch";
 import cheerio from "cheerio";
 
+let favorites = [];
+let performers = [];
 const typeDefs = gql`
   type Concert {
     title: String!
@@ -20,11 +22,19 @@ const typeDefs = gql`
     name:String!
     gender:String
     country:String
-    img:[String]!
+    img:[String!]!
+  }
+  type Watcher {
+    artist:Performer
+    updateConcert: Concert
   }
   type Query {
     allConcerts: [Concert!]!
     allPerformers: [Performer!]!
+    Favorites:[Watcher]!
+  }
+  type Mutation{
+    addFavorite(id:String!):Watcher!
   }
 `;
 const resolvers = {
@@ -64,8 +74,10 @@ const resolvers = {
       )
         .then((r) => r.json())
         .then((json) => {
-          console.log("json", json);
-          return json.artists;
+         
+          performers = json.artists;
+         
+          return performers;
         });
       // return axios
       //   .get(
@@ -75,6 +87,24 @@ const resolvers = {
       //   )
       //   .then((json) => json.data.results.artistmatches.artist);
     },
+    Favorites() {
+      return this.Favorites;
+    }
+  },
+  Mutation: {
+    addFavorite(_, { id }) {
+ 
+      const select = performers.find(performer => performer.id === id);
+      const { country, gender, name, score, type } = select;
+      // console.log('select', select);
+      const newFavorite = {
+        artist: { country, gender, id,name, score, type },
+        updateConcert: null
+      }
+      console.log('newFA', newFavorite);
+      favorites.push(newFavorite);
+      return newFavorite;
+    }
   },
   Performer: {
     img({ id }) {
@@ -87,8 +117,8 @@ const resolvers = {
       return fetch(url)
         .then((r) => r.json())
         .then((out) => {
-          const relations = out.relations;
-          
+          const { relations } = out;
+          console.log('relations', relations);
 
           if (relations) {
             let arr = [];
