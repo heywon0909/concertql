@@ -14,12 +14,13 @@ const typeDefs = gql`
     weekday: String!
   }
   type Performer {
-    name: String!
-    mbid: String
-    url: String!
-    listeners: String!
-    streamable: String!
-    img: [String]!
+    id:String!
+    type:String!
+    score:String!
+    name:String!
+    gender:String
+    country:String
+    img:[String]!
   }
   type Query {
     allConcerts: [Concert!]!
@@ -76,23 +77,23 @@ const resolvers = {
     },
   },
   Performer: {
-    img({ mbid }) {
-      if (!mbid) return [];
+    img({ id }) {
+      if (!id) return [];
       const url =
         "https://musicbrainz.org/ws/2/artist/" +
-        mbid +
+        id +
         "?inc=url-rels&fmt=json";
       console.log(url);
       return fetch(url)
         .then((r) => r.json())
         .then((out) => {
           const relations = out.relations;
-          console.log("relations", relations);
+          
 
           if (relations) {
             let arr = [];
             relations.forEach((item) => {
-              console.log("item", item.name);
+              // console.log("item", item.type);
               if (item.type === "image") {
                 let image_url = item.url.resource;
                 if (
@@ -107,13 +108,13 @@ const resolvers = {
                     "https://commons.wikimedia.org/wiki/Special:Redirect/file/" +
                     filename;
                 }
-                //console.log(image_url);
+                console.log(image_url);
                 arr.push(image_url);
               }
             });
             console.log("arr", arr);
             return arr;
-          }
+          } else return [];
         })
         .catch((err) => {
           throw console.log(err);
