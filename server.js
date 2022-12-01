@@ -88,7 +88,7 @@ const resolvers = {
       //   .then((json) => json.data.results.artistmatches.artist);
     },
     Favorites() {
-      return this.Favorites;
+      return favorites;
     }
   },
   Mutation: {
@@ -137,9 +137,11 @@ const resolvers = {
                   image_url =
                     "https://commons.wikimedia.org/wiki/Special:Redirect/file/" +
                     filename;
-                }
-                console.log(image_url);
+                 console.log(image_url);
                 arr.push(image_url);
+                
+                }
+               
               }
             });
             console.log("arr", arr);
