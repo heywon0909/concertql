@@ -22,7 +22,7 @@ const typeDefs = gql`
     name:String!
     gender:String
     country:String
-    img:[String!]!
+    img:[String]!
   }
   type Watcher {
     artist:Performer
@@ -118,35 +118,33 @@ const resolvers = {
         .then((r) => r.json())
         .then((out) => {
           const { relations } = out;
-          console.log('relations', relations);
-
-          if (relations) {
-            let arr = [];
-            relations.forEach((item) => {
-              // console.log("item", item.type);
-              if (item.type === "image") {
+        
+          if(relations!==null&& Array.isArray(relations)){
+              const image = relations.filter(item=>item.type=='image'&&item.url);
+       
+              const res = image.map(item=>{
+               
                 let image_url = item.url.resource;
                 if (
                   image_url.startsWith(
                     "https://commons.wikimedia.org/wiki/File:"
                   )
                 ) {
-                  const filename = image_url.substring(
+                   const filename = image_url.substring(
                     image_url.lastIndexOf("/") + 1
                   );
                   image_url =
                     "https://commons.wikimedia.org/wiki/Special:Redirect/file/" +
                     filename;
-                 console.log(image_url);
-                arr.push(image_url);
-                
-                }
-               
-              }
-            });
-            console.log("arr", arr);
-            return arr;
-          } else return [];
+                 return image_url
+              
+                  }
+              })
+              console.log('res',res);
+              return res;
+            }else return [];
+          
+            
         })
         .catch((err) => {
           throw console.log(err);
